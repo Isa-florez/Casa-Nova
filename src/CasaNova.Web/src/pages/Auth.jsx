@@ -1,46 +1,213 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../App';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import client from "../api/client";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState('Tenant');
-  const [email, setEmail] = useState('');
-  const { login } = useAuth();
-  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    login({ id: Date.now(), name: email.split('@')[0], role }, navigate);
-  };
+    const navigate = useNavigate();
 
-  return (
-    <div className="max-w-md mx-auto my-12 bg-white p-8 rounded-2xl border border-slate-100 shadow-xl">
-      <div className="flex justify-center border-b border-slate-100 pb-4 mb-6 gap-6">
-        <button type="button" onClick={() => setIsLogin(true)} className={`text-lg font-bold pb-2 ${isLogin ? 'text-[#1A365D] border-b-2 border-[#1A365D]' : 'text-slate-400'}`}>Sign In</button>
-        <button type="button" onClick={() => setIsLogin(false)} className={`text-lg font-bold pb-2 ${!isLogin ? 'text-[#1A365D] border-b-2 border-[#1A365D]' : 'text-slate-400'}`}>Register</button>
-      </div>
+    const [isLogin, setIsLogin] = useState(true);
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-slate-600 mb-1">Email Address</label>
-          <input type="email" required onChange={e => setEmail(e.target.value)} placeholder="name@example.com" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#1A365D]" />
+    const [form, setForm] = useState({
+        email: "",
+        password: "",
+        firstName: "",
+        lastName: ""
+    });
+
+    const handleChange = (e) => {
+
+        setForm({
+            ...form,
+            [e.target.name]: e.target.value
+        });
+
+    };
+
+    const handleSubmit = async (e) => {
+
+        e.preventDefault();
+
+        try {
+
+            if (isLogin) {
+
+                const response = await client.post(
+                    "/auth/login",
+                    {
+                        email: form.email,
+                        password: form.password
+                    }
+                );
+
+                localStorage.setItem(
+                    "token",
+                    response.data.token
+                );
+
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(response.data.user)
+                );
+
+                if (response.data.user.role === "Landlord") {
+
+                    navigate("/landlord-dashboard");
+
+                }
+                else {
+
+                    navigate("/tenant-dashboard");
+
+                }
+
+            }
+            else {
+
+                await client.post(
+                    "/auth/register",
+                    {
+                        firstName: form.firstName,
+                        lastName: form.lastName,
+                        email: form.email,
+                        password: form.password
+                    }
+                );
+
+                alert("Usuario registrado correctamente");
+
+                setIsLogin(true);
+
+            }
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            alert("Error al autenticarse");
+
+        }
+
+    };
+
+    return (
+
+        <div className="container mt-5">
+
+            <div className="row justify-content-center">
+
+                <div className="col-md-5">
+
+                    <div className="card shadow">
+
+                        <div className="card-body">
+
+                            <h2 className="mb-4 text-center">
+
+                                {
+                                    isLogin
+                                        ? "Iniciar Sesión"
+                                        : "Crear Cuenta"
+                                }
+
+                            </h2>
+
+                            <form onSubmit={handleSubmit}>
+
+                                {
+                                    !isLogin &&
+                                    <>
+                                        <div className="mb-3">
+
+                                            <label>Nombres</label>
+
+                                            <input
+                                                className="form-control"
+                                                name="firstName"
+                                                onChange={handleChange}
+                                            />
+
+                                        </div>
+
+                                        <div className="mb-3">
+
+                                            <label>Apellidos</label>
+
+                                            <input
+                                                className="form-control"
+                                                name="lastName"
+                                                onChange={handleChange}
+                                            />
+
+                                        </div>
+                                    </>
+                                }
+
+                                <div className="mb-3">
+
+                                    <label>Email</label>
+
+                                    <input
+                                        className="form-control"
+                                        name="email"
+                                        onChange={handleChange}
+                                    />
+
+                                </div>
+
+                                <div className="mb-3">
+
+                                    <label>Contraseña</label>
+
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        name="password"
+                                        onChange={handleChange}
+                                    />
+
+                                </div>
+
+                                <button
+                                    className="btn btn-primary w-100"
+                                >
+                                    {
+                                        isLogin
+                                            ? "Ingresar"
+                                            : "Registrarse"
+                                    }
+                                </button>
+
+                            </form>
+
+                            <hr />
+
+                            <button
+                                className="btn btn-outline-secondary w-100"
+                                onClick={() =>
+                                    setIsLogin(!isLogin)
+                                }
+                            >
+
+                                {
+                                    isLogin
+                                        ? "Crear una cuenta"
+                                        : "Ya tengo cuenta"
+                                }
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-        <div>
-          <label className="block text-sm font-semibold text-slate-600 mb-1">Password</label>
-          <input type="password" required placeholder="••••••••" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-[#1A365D]" />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-slate-600 mb-1">I am a:</label>
-          <select value={role} onChange={e => setRole(e.target.value)} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#1A365D]">
-            <option value="Tenant">Guest (Huésped)</option>
-            <option value="Landlord">Host (Propietario)</option>
-          </select>
-        </div>
-        <button type="submit" className="w-full bg-[#1A365D] hover:bg-[#11243F] text-white py-3.5 rounded-xl font-bold transition-colors shadow-md pt-4">
-          {isLogin ? 'Sign In' : 'Create Account'}
-        </button>
-      </form>
-    </div>
-  );
+
+    );
+
 }

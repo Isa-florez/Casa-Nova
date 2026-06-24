@@ -1,28 +1,142 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import client from "../api/client";
 
 export default function TenantDashboard() {
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-        <div>
-          <h3 className="font-bold text-[#B78420]">Verification Required</h3>
-          <p className="text-sm text-amber-700 font-light">Please upload your ID to clear automated KYC criteria before check-in.</p>
-        </div>
-        <Link to="/dashboard/kyc" className="bg-[#D69E2E] hover:bg-[#B78420] text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shrink-0">
-          Verify Now
-        </Link>
-      </div>
 
-      <h2 className="text-2xl font-bold text-[#1A365D]">My Bookings</h2>
-      <div className="bg-white border border-slate-100 rounded-2xl p-6 flex justify-between items-center shadow-sm">
+    const [bookings, setBookings] = useState([]);
+
+    useEffect(() => {
+        loadBookings();
+    }, []);
+
+    const loadBookings = async () => {
+
+        try {
+
+            const response = await client.get("/bookings/my");
+
+            setBookings(response.data);
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+        }
+
+    };
+
+    return (
+
         <div>
-          <span className="px-2 py-0.5 text-xs font-bold rounded-md bg-emerald-50 text-emerald-600 uppercase tracking-wider">Confirmed</span>
-          <h4 className="font-bold text-[#1A365D] mt-2 text-lg">Modern Apartment Laureles</h4>
-          <p className="text-slate-400 text-xs mt-1">June 25 - June 28, 2026</p>
+
+            <h1 className="text-3xl font-bold mb-8">
+
+                Mis Reservas
+
+            </h1>
+
+            <div className="bg-white shadow rounded p-6">
+
+                <table className="w-full">
+
+                    <thead>
+
+                        <tr className="border-b">
+
+                            <th className="text-left py-3">
+                                Propiedad
+                            </th>
+
+                            <th>
+                                Inicio
+                            </th>
+
+                            <th>
+                                Fin
+                            </th>
+
+                            <th>
+                                Check-In
+                            </th>
+
+                            <th>
+                                Check-Out
+                            </th>
+
+                            <th>
+                                Estado
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {
+
+                            bookings.map(booking => (
+
+                                <tr
+                                    key={booking.id}
+                                    className="border-b"
+                                >
+
+                                    <td className="py-4">
+
+                                        {booking.propertyTitle}
+
+                                    </td>
+
+                                    <td>
+
+                                        {booking.startDate}
+
+                                    </td>
+
+                                    <td>
+
+                                        {booking.endDate}
+
+                                    </td>
+
+                                    <td>
+
+                                        14:00
+
+                                    </td>
+
+                                    <td>
+
+                                        12:00
+
+                                    </td>
+
+                                    <td>
+
+                                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded">
+
+                                            {booking.status}
+
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            ))
+
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
         </div>
-        <button onClick={() => alert('Cancellation request dispatched.')} className="text-sm font-medium text-red-500 hover:underline">Cancel Stay</button>
-      </div>
-    </div>
-  );
+
+    );
+
 }

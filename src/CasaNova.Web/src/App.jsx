@@ -1,68 +1,134 @@
-import React, { createContext, useContext, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Marketplace from './pages/Marketplace';
-import PropertyDetail from './pages/PropertyDetail';
-import Auth from './pages/Auth';
-import TenantDashboard from './pages/TenantDashboard';
-import LandlordDashboard from './pages/LandlordDashboard';
-import CreateProperty from './pages/CreateProperty';
-import KycVerification from './pages/KycVerification';
-import Navbar from './components/Navbar';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-const AuthContext = createContext(null);
+import Navbar from "./components/Navbar";
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // { id: 1, name: 'Alice', role: 'Tenant' }
-  const [wishlist, setWishlist] = useState([]);
-  const [deferredAction, setDeferredAction] = useState(null);
+import Marketplace from "./pages/Marketplace";
+import PropertyDetail from "./pages/PropertyDetail";
+import Auth from "./pages/Auth";
 
-  const login = (userData, navigate) => {
-    setUser(userData);
-    if (deferredAction) {
-      const { redirectTo, callback } = deferredAction;
-      setDeferredAction(null);
-      if (callback) callback();
-      navigate(redirectTo);
-    } else {
-      navigate(userData.role === 'Landlord' ? '/dashboard/landlord' : '/dashboard/tenant');
-    }
-  };
+import TenantDashboard from "./pages/TenantDashboard";
+import LandlordDashboard from "./pages/LandlordDashboard";
 
-  const logout = () => setUser(null);
+import CreateProperty from "./pages/CreateProperty";
+import KycVerification from "./pages/KycVerification";
 
-  const toggleWishlist = (id) => {
-    setWishlist(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
-  };
+import Wishlist from "./pages/Wishlist";
+import Notifications from "./pages/Notifications";
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, wishlist, toggleWishlist, deferredAction, setDeferredAction }}>
-      {children}
-    </AuthContext.Provider>
-  );
+import { AuthProvider, useAuth } from "./App";
+
+const ProtectedRoute = ({ children, roles }) => {
+
+    const { user } = useAuth();
+
+    if (!user)
+        return <Navigate to="/auth" replace />;
+
+    if (roles && !roles.includes(user.role))
+        return <Navigate to="/properties" replace />;
+
+    return children;
 };
 
-export const useAuth = () => useContext(AuthContext);
-
 export default function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="min-h-screen bg-[#F7FAFC] text-slate-800 font-sans antialiased">
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <Routes>
-              <Route path="/" element={<Navigate to="/properties" replace />} />
-              <Route path="/properties" element={<Marketplace />} />
-              <Route path="/properties/:id" element={<PropertyDetail />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard/tenant" element={<TenantDashboard />} />
-              <Route path="/dashboard/landlord" element={<LandlordDashboard />} />
-              <Route path="/dashboard/landlord/create" element={<CreateProperty />} />
-              <Route path="/dashboard/kyc" element={<KycVerification />} />
-            </Routes>
-          </main>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
-  );
+
+    return (
+
+        <AuthProvider>
+
+            <BrowserRouter>
+
+                <div className="min-h-screen bg-[#F7FAFC]">
+
+                    <Navbar />
+
+                    <main className="max-w-7xl mx-auto px-4 py-8">
+
+                        <Routes>
+
+                            <Route
+                                path="/"
+                                element={<Navigate to="/properties" />}
+                            />
+
+                            <Route
+                                path="/properties"
+                                element={<Marketplace />}
+                            />
+
+                            <Route
+                                path="/properties/:id"
+                                element={<PropertyDetail />}
+                            />
+
+                            <Route
+                                path="/auth"
+                                element={<Auth />}
+                            />
+
+                            <Route
+                                path="/wishlist"
+                                element={
+                                    <ProtectedRoute>
+                                        <Wishlist />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            <Route
+                                path="/notifications"
+                                element={
+                                    <ProtectedRoute>
+                                        <Notifications />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            <Route
+                                path="/dashboard/tenant"
+                                element={
+                                    <ProtectedRoute roles={["Guest"]}>
+                                        <TenantDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            <Route
+                                path="/dashboard/landlord"
+                                element={
+                                    <ProtectedRoute roles={["Owner"]}>
+                                        <LandlordDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            <Route
+                                path="/dashboard/landlord/create"
+                                element={
+                                    <ProtectedRoute roles={["Owner"]}>
+                                        <CreateProperty />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            <Route
+                                path="/dashboard/kyc"
+                                element={
+                                    <ProtectedRoute>
+                                        <KycVerification />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                        </Routes>
+
+                    </main>
+
+                </div>
+
+            </BrowserRouter>
+
+        </AuthProvider>
+
+    );
 }

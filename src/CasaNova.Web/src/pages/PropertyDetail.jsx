@@ -1,45 +1,173 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../App';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import client from "../api/client";
+import { useAuth } from "../App";
 
 export default function PropertyDetail() {
-  const { id } = useParams();
-  const { user, setDeferredAction } = useAuth();
-  const navigate = useNavigate();
 
-  const prop = { id, title: 'Modern Apartment Laureles', price: 150000, description: 'Premium temporary stay equipped with high-speed internet and prime location amenities.' };
+    const navigate = useNavigate();
 
-  const handleBooking = () => {
-    if (!user) {
-      setDeferredAction({ redirectTo: `/properties/${id}`, callback: () => alert('Booking pipeline linked successfully!') });
-      navigate('/auth');
-    } else {
-      navigate('/dashboard/tenant');
-    }
-  };
+    const { user, setDeferredAction } = useAuth();
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-6">
-        <div className="h-80 bg-slate-100 rounded-3xl flex items-center justify-center text-7xl shadow-inner">🏢</div>
-        <h1 className="text-3xl font-extrabold text-[#1A365D] tracking-tight">{prop.title}</h1>
-        <p className="text-slate-600 leading-relaxed">{prop.description}</p>
-        <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl space-y-1">
-          <h4 className="font-bold text-[#B78420] text-sm">Rules & Policy:</h4>
-          <p className="text-xs text-slate-500"> Check-in: 2:00 PM | Check-out: 12:00 PM</p>
+    const { id } = useParams();
+
+    const [property, setProperty] = useState(null);
+
+    const [booking, setBooking] = useState({
+        startDate: "",
+        endDate: ""
+    });
+
+    useEffect(() => {
+
+        loadProperty();
+
+    }, []);
+
+    const loadProperty = async () => {
+
+        try {
+
+            const response = await client.get(
+                `/properties/${id}`
+            );
+
+            setProperty(response.data);
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+        }
+
+    };
+
+
+    const handleBooking = async () => {
+
+        if (!user) {
+
+            setDeferredAction({
+                redirectTo: `/properties/${id}`
+            });
+
+            navigate("/auth");
+
+            return;
+
+        }
+
+        try {
+
+            await client.post(
+                "/bookings",
+                {
+                    propertyId: id,
+                    startDate: booking.startDate,
+                    endDate: booking.endDate
+                }
+            );
+
+            alert("Reserva realizada correctamente");
+
+            navigate("/dashboard/tenant");
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            alert("No fue posible crear la reserva");
+
+        }
+
+    };
+
+
+
+    if (!property)
+        return <div>Cargando...</div>;
+
+
+    return (
+
+        <div className="grid md:grid-cols-2 gap-10">
+
+            <div>
+
+                <img
+                    src={property.imageUrl}
+                    className="rounded shadow"
+                />
+
+            </div>
+
+
+            <div>
+
+                <h1 className="text-4xl font-bold">
+
+                    {property.title}
+
+                </h1>
+
+                <p className="text-gray-500 mt-2">
+
+                    {property.city}
+
+                </p>
+
+                <p className="mt-5">
+
+                    {property.description}
+
+                </p>
+
+                <h2 className="text-2xl font-bold mt-6">
+
+                    ${property.pricePerNight} / noche
+
+                </h2>
+
+
+                <div className="mt-8 space-y-4">
+
+                    <input
+                        type="date"
+                        className="border p-3 rounded w-full"
+                        onChange={(e) =>
+                            setBooking({
+                                ...booking,
+                                startDate: e.target.value
+                            })
+                        }
+                    />
+
+                    <input
+                        type="date"
+                        className="border p-3 rounded w-full"
+                        onChange={(e) =>
+                            setBooking({
+                                ...booking,
+                                endDate: e.target.value
+                            })
+                        }
+                    />
+
+                    <button
+                        className="bg-green-600 text-white px-5 py-3 rounded"
+                        onClick={handleBooking}
+                    >
+                        Reservar
+                    </button>
+
+                </div>
+
+            </div>
+
         </div>
-      </div>
-      <div>
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl space-y-4">
-          <div>
-            <p className="text-slate-400 text-xs font-bold uppercase">Price per night</p>
-            <p className="text-3xl font-black text-[#1A365D]">${prop.price.toLocaleString()} <span className="text-xs font-normal text-slate-400">COP</span></p>
-          </div>
-          <button onClick={handleBooking} className="w-full bg-[#D69E2E] hover:bg-[#B78420] text-white py-3.5 rounded-xl font-bold transition-all shadow-md">
-            Book Stay Now
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+
+    );
+
 }
