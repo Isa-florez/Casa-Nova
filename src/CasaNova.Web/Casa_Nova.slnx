@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CasaNova.API/CasaNova.API.csproj" />
+    <Project Path="src/CasaNova.Application/CasaNova.Application.csproj" />
+    <Project Path="src/CasaNova.Domain/CasaNova.Domain.csproj" />
+    <Project Path="src/CasaNova.Infrastructure/CasaNova.Infrastructure.csproj" />
+  </Folder>
+</Solution>

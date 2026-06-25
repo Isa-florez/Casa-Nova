@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: casanova_db
+    environment:
+      POSTGRES_DB: casanova_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./src
+      dockerfile: CasaNova.API/Dockerfile
+    container_name: casanova_api
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=casanova_db;Username=postgres;Password=postgres"
+      Jwt__Secret: "CasaNova_SuperSecretKey_2024_MustBe32CharsMin!"
+      Jwt__Issuer: "CasaNova"
+      Jwt__Audience: "CasaNova"
+      Jwt__ExpirationMinutes: "1440"
+      Email__Host: "${EMAIL_HOST:-smtp.gmail.com}"
+      Email__Port: "${EMAIL_PORT:-587}"
+      Email__From: "${EMAIL_FROM:-noreply@casanova.com}"
+      Email__User: "${EMAIL_USER:-}"
+      Email__Password: "${EMAIL_PASSWORD:-}"
+      OpenAI__ApiKey: "${OPENAI_API_KEY:-}"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./src/CasaNova.Web
+      dockerfile: Dockerfile
+    container_name: casanova_web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  pg_data:

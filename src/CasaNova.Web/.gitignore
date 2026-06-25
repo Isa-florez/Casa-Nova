@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+.env
+=======
 # Logs
 logs
 *.log
@@ -22,3 +25,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+>>>>>>> 86caf35 (end)

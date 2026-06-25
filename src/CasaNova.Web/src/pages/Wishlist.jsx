@@ -1,4 +1,4 @@
-import { useAuth } from "../App";
+import { useAuth } from "../context/AuthContext";
 
 export default function Wishlist() {
 

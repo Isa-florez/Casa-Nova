@@ -9,13 +9,12 @@ import Auth from "./pages/Auth";
 import TenantDashboard from "./pages/TenantDashboard";
 import LandlordDashboard from "./pages/LandlordDashboard";
 
-import CreateProperty from "./pages/CreateProperty";
 import KycVerification from "./pages/KycVerification";
 
 import Wishlist from "./pages/Wishlist";
 import Notifications from "./pages/Notifications";
 
-import { AuthProvider, useAuth } from "./App";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 const ProtectedRoute = ({ children, roles }) => {
 
@@ -98,15 +97,6 @@ export default function App() {
                                 element={
                                     <ProtectedRoute roles={["Owner"]}>
                                         <LandlordDashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-
-                            <Route
-                                path="/dashboard/landlord/create"
-                                element={
-                                    <ProtectedRoute roles={["Owner"]}>
-                                        <CreateProperty />
                                     </ProtectedRoute>
                                 }
                             />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import client from "../api/client";
-import { useAuth } from "../App";
+import { useAuth } from "../context/AuthContext";
 
 export default function Marketplace() {
 
